@@ -38,8 +38,8 @@ ADD_CUSTOM_TARGET (uninstall "${CMAKE_COMMAND}" -P
 
 if (NOT CMAKE_BUILD_TYPE)
     #set(CMAKE_BUILD_TYPE Release)
-    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
-    #set(CMAKE_BUILD_TYPE Debug)
+    #set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 #set the default path for built executables to the "bin" directory
@@ -53,6 +53,7 @@ option(BUILD_C_BINDINGS "Build C bindings" ON)
 option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
 option(BUILD_MATLAB_BINDINGS "Build Matlab bindings" ON)
 option(BUILD_CUDA_LIB "Build CUDA library" OFF)
+option(BUILD_OpenCL_LIB "Build OpenCL library" OFF)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOC "Build documentation" ON)
@@ -112,7 +113,7 @@ if (USE_MPI AND HDF5_IS_PARALLEL)
 endif()
 
 
-find_package(GTest) 
+find_package(GTest)
 if (NOT GTEST_FOUND)
 	message(WARNING "gtest library not found, some tests will not be run")
 endif()
@@ -129,6 +130,18 @@ if (USE_OPENMP)
     endif()
 endif()
 
+
+# OpenCL support
+if (BUILD_OpenCL_LIB)
+    find_package(OpenCL)
+    if (OpenCL_FOUND)
+        message(STATUS "OpenCL found (include: ${OpenCL_INCLUDE_DIRS}, lib: ${OpenCL_LIBRARIES})")
+        include_directories(${OpenCL_INCLUDE_DIRS})
+    else(OpenCL_FOUND)
+        message(STATUS "OpenCL not found, OpenCL library will not be built")
+        set(BUILD_OpenCL_LIB OFF)
+    endif(OpenCL_FOUND)
+endif(BUILD_OpenCL_LIB)
 
 # CUDA support
 if (BUILD_CUDA_LIB)
@@ -191,7 +204,7 @@ find_program(PACKAGE_MAKER_PROGRAM PackageMaker
 if(EXISTS ${PACKAGE_MAKER_PROGRAM})
   list(APPEND CPACK_GENERATOR "PackageMaker")
 endif(EXISTS ${PACKAGE_MAKER_PROGRAM})
- 
+
 set(CPACK_GENERATOR "${CPACK_GENERATOR}")
 set(CPACK_MONOLITHIC_INSTALL 1)
 set(CPACK_SET_DESTDIR ON)
@@ -213,6 +226,7 @@ message(STATUS "Building tests: ${BUILD_TESTS}")
 message(STATUS "Building documentation: ${BUILD_DOC}")
 message(STATUS "Building python bindings: ${BUILD_PYTHON_BINDINGS}")
 message(STATUS "Building matlab bindings: ${BUILD_MATLAB_BINDINGS}")
+message(STATUS "Building OpenCL library: ${BUILD_OpenCL_LIB}")
 message(STATUS "Building CUDA library: ${BUILD_CUDA_LIB}")
 message(STATUS "Using OpenMP support: ${USE_OPENMP}")
 message(STATUS "Using MPI support: ${USE_MPI}")
